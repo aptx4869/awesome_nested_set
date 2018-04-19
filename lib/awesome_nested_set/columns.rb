@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Mixed into both classes and instances to provide easy access to the column names
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
@@ -56,7 +58,7 @@ module CollectiveIdea #:nodoc:
         end
 
         def quoted_scope_column_names
-          scope_column_names.collect {|column_name| connection.quote_column_name(column_name) }
+          scope_column_names.collect { |column_name| connection.quote_column_name(column_name) }
         end
 
         def quoted_order_column_name
@@ -84,7 +86,7 @@ module CollectiveIdea #:nodoc:
         end
 
         def model_connection
-          self.is_a?(Class) ? self.connection : self.class.connection
+          is_a?(Class) ? connection : self.class.connection
         end
       end
     end

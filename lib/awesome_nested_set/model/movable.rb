@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'awesome_nested_set/move'
 
 module CollectiveIdea #:nodoc:
@@ -5,7 +7,6 @@ module CollectiveIdea #:nodoc:
     module NestedSet #:nodoc:
       module Model
         module Movable
-
           def move_possible?(target)
             self != target && # Can't target self
               same_scope?(target) && # can't be in different scopes
@@ -69,17 +70,17 @@ module CollectiveIdea #:nodoc:
           # Can order by any attribute class that uses the Comparable mixin, for example a string or integer
           # Usage example when sorting categories alphabetically: @new_category.move_to_ordered_child_of(@root, "name")
           def move_to_ordered_child_of(parent, order_attribute, ascending = true)
-            self.move_to_root and return unless parent
+            move_to_root && return unless parent
 
             left_neighbor = find_left_neighbor(parent, order_attribute, ascending)
-            self.move_to_child_of(parent)
+            move_to_child_of(parent)
 
             return unless parent.children.many?
 
             if left_neighbor
-              self.move_to_right_of(left_neighbor)
+              move_to_right_of(left_neighbor)
             else # Self is the left most node.
-              self.move_to_left_of(parent.children[0])
+              move_to_left_of(parent.children[0])
             end
           end
 
@@ -88,9 +89,9 @@ module CollectiveIdea #:nodoc:
             left = nil
             parent.children.each do |n|
               if ascending
-                left = n if n.send(order_attribute) < self.send(order_attribute)
+                left = n if n.send(order_attribute) < send(order_attribute)
               else
-                left = n if n.send(order_attribute) > self.send(order_attribute)
+                left = n if n.send(order_attribute) > send(order_attribute)
               end
             end
             left
@@ -102,7 +103,7 @@ module CollectiveIdea #:nodoc:
             run_callbacks :move do
               in_tenacious_transaction do
                 target = reload_target(target, position)
-                self.reload_nested_set
+                reload_nested_set
 
                 Move.new(target, position, self).move
                 update_counter_cache
@@ -113,10 +114,10 @@ module CollectiveIdea #:nodoc:
 
           protected
 
-          def after_move_to(target, position)
-            target.reload_nested_set if target
-            self.set_depth_for_self_and_descendants!
-            self.reload_nested_set
+          def after_move_to(target, _position)
+            target&.reload_nested_set
+            set_depth_for_self_and_descendants!
+            reload_nested_set
           end
 
           def move_to_new_parent
@@ -132,9 +133,7 @@ module CollectiveIdea #:nodoc:
           end
 
           def prevent_unpersisted_move
-            if self.new_record?
-              raise ActiveRecord::ActiveRecordError, "You cannot move a new node"
-            end
+            raise ActiveRecord::ActiveRecordError, 'You cannot move a new node' if new_record?
           end
 
           def within_bounds?(left_bound, right_bound)

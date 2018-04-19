@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
@@ -7,7 +9,7 @@ module CollectiveIdea #:nodoc:
 
         delegate :left_column_name, :right_column_name, :quoted_parent_column_full_name,
                  :order_for_rebuild, :scope_for_rebuild, :counter_cache_column_name,
-                 :to => :model
+                 to: :model
 
         def initialize(model, validate_nodes)
           @model = model
@@ -39,12 +41,12 @@ module CollectiveIdea #:nodoc:
           node_children(node).each { |n| set_left_and_rights(n) }
           set_right!(node)
 
-          node.save!(:validate => validate_nodes)
+          node.save!(validate: validate_nodes)
         end
 
         def node_children(node)
-          model.where(["#{quoted_parent_column_full_name} = ? #{scope_for_rebuild.call(node)}", node.primary_id]).
-                order(order_for_rebuild)
+          model.where(["#{quoted_parent_column_full_name} = ? #{scope_for_rebuild.call(node)}", node.primary_id])
+               .order(order_for_rebuild)
         end
 
         def root_nodes

@@ -1,9 +1,10 @@
+# frozen_string_literal: true
+
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
       module Model
         module Prunable
-
           # Prunes a branch off of the tree, shifting all of the elements on the right
           # back to the left so the counts still work.
           def destroy_descendants
@@ -42,18 +43,18 @@ module CollectiveIdea #:nodoc:
                 model.destroy
               end
             elsif acts_as_nested_set_options[:dependent] == :restrict_with_exception
-              raise ActiveRecord::DeleteRestrictionError.new(:children) unless leaf?
-              return true
+              raise ActiveRecord::DeleteRestrictionError, :children unless leaf?
+              true
             elsif acts_as_nested_set_options[:dependent] == :restrict_with_error
               unless leaf?
                 record = self.class.human_attribute_name(:children).downcase
                 errors.add(:base, :"restrict_dependent_destroy.#{Rails::VERSION::MAJOR < 5 ? 'many' : 'has_many'}", record: record)
                 return false
               end
-              return true
-             elsif acts_as_nested_set_options[:dependent] == :nullify
-               descendants.update_all(parent_column_name => nil)
-             else
+              true
+            elsif acts_as_nested_set_options[:dependent] == :nullify
+              descendants.update_all(parent_column_name => nil)
+            else
               descendants.delete_all
             end
           end
@@ -67,8 +68,8 @@ module CollectiveIdea #:nodoc:
             full_column_name = send("quoted_#{direction}_column_full_name")
             column_name = send("quoted_#{direction}_column_name")
 
-            nested_set_scope.where(["#{full_column_name} > ?", right]).
-              update_all(["#{column_name} = (#{column_name} - ?)", diff])
+            nested_set_scope.where(["#{full_column_name} > ?", right])
+                            .update_all(["#{column_name} = (#{column_name} - ?)", diff])
           end
 
           def diff

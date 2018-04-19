@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 source 'https://rubygems.org'
 
 gemspec
 
 platforms :ruby do
+  gem 'mysql2', '< 0.4.0'
+  gem 'pg', '0.21.0'
   gem 'sqlite3'
-  gem 'mysql2', "< 0.4.0"
-  gem 'pg', "0.21.0"
 end
 
 # Add Oracle Adapters

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
@@ -35,14 +37,14 @@ module CollectiveIdea #:nodoc:
                  :quoted_left_column_name, :quoted_right_column_name,
                  :quoted_parent_column_name, :parent_column_name, :nested_set_scope_without_default_scope,
                  :primary_column_name, :quoted_primary_column_name, :primary_id,
-                 :to => :instance
+                 to: :instance
 
-        delegate :arel_table, :class, :to => :instance, :prefix => true
-        delegate :base_class, :to => :instance_class, :prefix => :instance
+        delegate :arel_table, :class, to: :instance, prefix: true
+        delegate :base_class, to: :instance_class, prefix: :instance
 
         def where_statement(left_bound, right_bound)
-          instance_arel_table[left_column_name].in(left_bound..right_bound).
-            or(instance_arel_table[right_column_name].in(left_bound..right_bound))
+          instance_arel_table[left_column_name].in(left_bound..right_bound)
+                                               .or(instance_arel_table[right_column_name].in(left_bound..right_bound))
         end
 
         def conditions(a, b, c, d)
@@ -51,41 +53,39 @@ module CollectiveIdea #:nodoc:
                         case_condition_for_parent
 
           # We want the record to be 'touched' if it timestamps.
-          if @instance.respond_to?(:updated_at)
-            _conditions << ", updated_at = :timestamp"
-          end
+          _conditions << ', updated_at = :timestamp' if @instance.respond_to?(:updated_at)
 
           [
             _conditions,
             {
-              :a => a, :b => b, :c => c, :d => d,
-              :primary_id => instance.primary_id,
-              :new_parent_id => new_parent_id,
-              :timestamp => Time.now.utc
+              a: a, b: b, c: c, d: d,
+              primary_id: instance.primary_id,
+              new_parent_id: new_parent_id,
+              timestamp: Time.now.utc
             }
           ]
         end
 
         def case_condition_for_direction(column_name)
           column = send(column_name)
-          "#{column} = CASE " +
-            "WHEN #{column} BETWEEN :a AND :b " +
-            "THEN #{column} + :d - :b " +
-            "WHEN #{column} BETWEEN :c AND :d " +
-            "THEN #{column} + :a - :c " +
+          "#{column} = CASE " \
+            "WHEN #{column} BETWEEN :a AND :b " \
+            "THEN #{column} + :d - :b " \
+            "WHEN #{column} BETWEEN :c AND :d " \
+            "THEN #{column} + :a - :c " \
             "ELSE #{column} END, "
         end
 
         def case_condition_for_parent
-          "#{quoted_parent_column_name} = CASE " +
-            "WHEN #{quoted_primary_column_name} = :primary_id THEN :new_parent_id " +
+          "#{quoted_parent_column_name} = CASE " \
+            "WHEN #{quoted_primary_column_name} = :primary_id THEN :new_parent_id " \
             "ELSE #{quoted_parent_column_name} END"
         end
 
         def lock_nodes_between!(left_bound, right_bound)
           # select the rows in the model between a and d, and apply a lock
-          instance_base_class.right_of(left_bound).left_of_right_side(right_bound).
-                              select(primary_column_name).lock(true)
+          instance_base_class.right_of(left_bound).left_of_right_side(right_bound)
+                             .select(primary_column_name).lock(true)
         end
 
         def root
@@ -115,7 +115,7 @@ module CollectiveIdea #:nodoc:
 
         def prevent_impossible_move
           if !root && !instance.move_possible?(target)
-            raise ImpossibleMove, "Impossible move, target node cannot be inside moved tree."
+            raise ImpossibleMove, 'Impossible move, target node cannot be inside moved tree.'
           end
         end
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'awesome_nested_set/model/prunable'
 require 'awesome_nested_set/model/movable'
 require 'awesome_nested_set/model/transactable'
@@ -9,12 +11,11 @@ require 'awesome_nested_set/iterator'
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
-
       module Model
         extend ActiveSupport::Concern
 
         included do
-          delegate :quoted_table_name, :arel_table, :to => self
+          delegate :quoted_table_name, :arel_table, to: self
           extend Validatable
           extend Rebuildable
           include Movable
@@ -25,7 +26,7 @@ module CollectiveIdea #:nodoc:
 
         module ClassMethods
           def associate_parents(objects)
-            return objects unless objects.all? {|o| o.respond_to?(:association)}
+            return objects unless objects.all? { |o| o.respond_to?(:association) }
 
             id_indexed = objects.index_by(&primary_column_name.to_sym)
             objects.each do |object|
@@ -79,7 +80,7 @@ module CollectiveIdea #:nodoc:
           end
 
           def nested_set_scope(options = {})
-            options = {:order => { order_column => :asc }}.merge(options)
+            options = { order: { order_column => :asc } }.merge(options)
 
             where(options[:conditions]).order(options.delete(:order))
           end
@@ -140,7 +141,7 @@ module CollectiveIdea #:nodoc:
         # declared in the acts_as_nested_set declaration.
         def nested_set_scope(options = {})
           if (scopes = Array(acts_as_nested_set_options[:scope])).any?
-            options[:conditions] = scopes.inject({}) do |conditions,attr|
+            options[:conditions] = scopes.inject({}) do |conditions, attr|
               conditions.merge attr => self[attr]
             end
           end
@@ -161,7 +162,7 @@ module CollectiveIdea #:nodoc:
 
         def to_text
           self_and_descendants.map do |node|
-            "#{'*'*(node.level+1)} #{node.primary_id} #{node.to_s} (#{node.parent_id}, #{node.left}, #{node.right})"
+            "#{'*' * (node.level + 1)} #{node.primary_id} #{node.to_s} (#{node.parent_id}, #{node.left}, #{node.right})"
           end.join("\n")
         end
 
@@ -169,7 +170,7 @@ module CollectiveIdea #:nodoc:
 
         def without_self(scope)
           return scope if new_record?
-          scope.where(["#{self.class.quoted_table_name}.#{self.class.quoted_primary_column_name} != ?", self.primary_id])
+          scope.where(["#{self.class.quoted_table_name}.#{self.class.quoted_primary_column_name} != ?", primary_id])
         end
 
         def store_new_parent
@@ -183,7 +184,7 @@ module CollectiveIdea #:nodoc:
 
         def right_most_node
           @right_most_node ||= nested_set_scope_without_default_scope(
-            :order => {right_column_name => :desc}
+            order: { right_column_name => :desc }
           ).first
         end
 
@@ -220,14 +221,14 @@ module CollectiveIdea #:nodoc:
         end
 
         def update_depth(depth)
-          nested_set_scope.primary_key_scope(primary_id).
-              update_all(["#{quoted_depth_column_name} = ?", depth])
+          nested_set_scope.primary_key_scope(primary_id)
+                          .update_all(["#{quoted_depth_column_name} = ?", depth])
           self[depth_column_name] = depth
         end
 
         def change_descendants_depth!(diff)
           if !leaf? && diff != 0
-            sign = "++-"[diff <=> 0]
+            sign = '++-'[diff <=> 0]
             descendants.update_all("#{quoted_depth_column_name} = #{quoted_depth_column_name} #{sign} #{diff.abs}")
           end
         end
@@ -236,12 +237,12 @@ module CollectiveIdea #:nodoc:
           return unless acts_as_nested_set_options[:counter_cache]
 
           # Decrease the counter for all old parents
-          if old_parent = self.parent
+          if old_parent = parent
             self.class.decrement_counter(acts_as_nested_set_options[:counter_cache], old_parent)
           end
 
           # Increase the counter for all new parents
-          if new_parent = self.reload.parent
+          if new_parent = reload.parent
             self.class.increment_counter(acts_as_nested_set_options[:counter_cache], new_parent)
           end
         end
@@ -255,8 +256,8 @@ module CollectiveIdea #:nodoc:
         # reload left, right, and parent
         def reload_nested_set
           reload(
-            :select => "#{quoted_left_column_full_name}, #{quoted_right_column_full_name}, #{quoted_parent_column_full_name}",
-            :lock => true
+            select: "#{quoted_left_column_full_name}, #{quoted_right_column_full_name}, #{quoted_parent_column_full_name}",
+            lock: true
           )
         end
 

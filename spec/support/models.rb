@@ -1,36 +1,42 @@
-class Note < ActiveRecord::Base
-  acts_as_nested_set :scope => [:notable_id, :notable_type]
+# frozen_string_literal: true
+
+class ApplicationRecord < ActiveRecord::Base
+  self.abstract_class = true
+end
+
+class Note < ApplicationRecord
+  acts_as_nested_set scope: %i(notable_id notable_type)
 
   belongs_to :user, inverse_of: :notes
 end
 
-class DefaultScopedModel < ActiveRecord::Base
+class DefaultScopedModel < ApplicationRecord
   acts_as_nested_set
 end
 
-class Default < ActiveRecord::Base
+class Default < ApplicationRecord
   self.table_name = 'categories'
   acts_as_nested_set
 end
 
-class ScopedCategory < ActiveRecord::Base
+class ScopedCategory < ApplicationRecord
   self.table_name = 'categories'
-  acts_as_nested_set :scope => :organization
+  acts_as_nested_set scope: :organization
 end
 
-class OrderedCategory < ActiveRecord::Base
+class OrderedCategory < ApplicationRecord
   self.table_name = 'categories'
-  acts_as_nested_set :order_column => 'name'
+  acts_as_nested_set order_column: 'name'
 end
 
-class RenamedColumns < ActiveRecord::Base
-  acts_as_nested_set :parent_column => 'mother_id',
-                     :left_column => 'red',
-                     :right_column => 'black',
-                     :depth_column => 'pitch'
+class RenamedColumns < ApplicationRecord
+  acts_as_nested_set parent_column: 'mother_id',
+                     left_column: 'red',
+                     right_column: 'black',
+                     depth_column: 'pitch'
 end
 
-class Category < ActiveRecord::Base
+class Category < ApplicationRecord
   acts_as_nested_set
 
   validates_presence_of :name
@@ -40,7 +46,7 @@ class Category < ActiveRecord::Base
   cattr_accessor :test_allows_move
   @@test_allows_move = true
   def custom_before_move
-    if !@@test_allows_move
+    unless @@test_allows_move
       if Rails::VERSION::MAJOR < 5
         false
       else
@@ -53,62 +59,60 @@ class Category < ActiveRecord::Base
     name
   end
 
-  def recurse &block
-    block.call self, lambda{
-      self.children.each do |child|
+  def recurse(&block)
+    yield self, lambda {
+      children.each do |child|
         child.recurse &block
       end
     }
   end
 end
 
-class Thing < ActiveRecord::Base
-  acts_as_nested_set :counter_cache => 'children_count'
+class Thing < ApplicationRecord
+  acts_as_nested_set counter_cache: 'children_count'
 end
 
-class DefaultWithCallbacks < ActiveRecord::Base
-
+class DefaultWithCallbacks < ApplicationRecord
   self.table_name = 'categories'
 
   attr_accessor :before_add, :after_add, :before_remove, :after_remove
 
-  acts_as_nested_set :before_add => :do_before_add_stuff,
-    :after_add     => :do_after_add_stuff,
-    :before_remove => :do_before_remove_stuff,
-    :after_remove  => :do_after_remove_stuff
+  acts_as_nested_set before_add: :do_before_add_stuff,
+                     after_add: :do_after_add_stuff,
+                     before_remove: :do_before_remove_stuff,
+                     after_remove: :do_after_remove_stuff
 
   private
 
-    [ :before_add, :after_add, :before_remove, :after_remove ].each do |hook_name|
-      define_method "do_#{hook_name}_stuff" do |child_node|
-        self.send("#{hook_name}=", child_node)
-      end
+  %i(before_add after_add before_remove after_remove).each do |hook_name|
+    define_method "do_#{hook_name}_stuff" do |child_node|
+      send("#{hook_name}=", child_node)
     end
-
+  end
 end
 
-class Broken < ActiveRecord::Base
+class Broken < ApplicationRecord
   acts_as_nested_set
 end
 
-class Order < ActiveRecord::Base
+class Order < ApplicationRecord
   acts_as_nested_set
 
   default_scope -> { order(name: :asc) }
 end
 
-class Position < ActiveRecord::Base
+class Position < ApplicationRecord
   acts_as_nested_set
 
   default_scope -> { order(position: :asc) }
 end
 
-class NoDepth < ActiveRecord::Base
+class NoDepth < ApplicationRecord
   acts_as_nested_set
 end
 
-class User < ActiveRecord::Base
-  acts_as_nested_set :parent_column => 'parent_uuid', :primary_column => 'uuid'
+class User < ApplicationRecord
+  acts_as_nested_set parent_column: 'parent_uuid', primary_column: 'uuid'
 
   validates_presence_of :name
   validates_presence_of :uuid
@@ -123,7 +127,7 @@ class User < ActiveRecord::Base
   cattr_accessor :test_allows_move
   @@test_allows_move = true
   def custom_before_move
-    if !@@test_allows_move
+    unless @@test_allows_move
       if Rails::VERSION::MAJOR < 5
         false
       else
@@ -136,9 +140,9 @@ class User < ActiveRecord::Base
     name
   end
 
-  def recurse &block
-    block.call self, lambda{
-      self.children.each do |child|
+  def recurse(&block)
+    yield self, lambda {
+      children.each do |child|
         child.recurse &block
       end
     }
@@ -149,12 +153,12 @@ class User < ActiveRecord::Base
   end
 end
 
-class ScopedUser < ActiveRecord::Base
+class ScopedUser < ApplicationRecord
   self.table_name = 'users'
-  acts_as_nested_set :parent_column => 'parent_uuid', :primary_column => 'uuid', :scope => :organization
+  acts_as_nested_set parent_column: 'parent_uuid', primary_column: 'uuid', scope: :organization
 end
 
-class Superclass < ActiveRecord::Base
+class Superclass < ApplicationRecord
   acts_as_nested_set
   self.table_name = 'single_table_inheritance'
 end

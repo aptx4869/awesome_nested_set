@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# frozen_string_literal: true
+
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
@@ -23,7 +24,7 @@ module CollectiveIdea #:nodoc:
         #
         def nested_set_options(class_or_item, mover = nil)
           if class_or_item.is_a? Array
-            items = class_or_item.reject { |e| !e.root? }
+            items = class_or_item.select(&:root?)
           else
             class_or_item = class_or_item.roots if class_or_item.respond_to?(:scope)
             items = Array(class_or_item)
@@ -31,9 +32,7 @@ module CollectiveIdea #:nodoc:
           result = []
           items.each do |root|
             result += root.class.associate_parents(root.self_and_descendants).map do |i|
-              if mover.nil? || mover.new_record? || mover.move_possible?(i)
-                [yield(i), i.primary_id]
-              end
+              [yield(i), i.primary_id] if mover.nil? || mover.new_record? || mover.move_possible?(i)
             end.compact
           end
           result

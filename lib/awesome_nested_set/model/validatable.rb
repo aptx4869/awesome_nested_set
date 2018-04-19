@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'awesome_nested_set/set_validator'
 
 module CollectiveIdea
@@ -5,7 +7,6 @@ module CollectiveIdea
     module NestedSet
       module Model
         module Validatable
-
           def valid?
             left_and_rights_valid? && no_duplicates_for_columns? && all_roots_valid?
           end
@@ -17,11 +18,11 @@ module CollectiveIdea
           def no_duplicates_for_columns?
             [quoted_left_column_full_name, quoted_right_column_full_name].all? do |column|
               # No duplicates
-              select("#{scope_string}#{column}, COUNT(#{column}) as _count").
-                group("#{scope_string}#{column}", quoted_primary_key_column_full_name).
-                having("COUNT(#{column}) > 1").
-                order(primary_column_name => :asc).
-                first.nil?
+              select("#{scope_string}#{column}, COUNT(#{column}) as _count")
+                .group("#{scope_string}#{column}", quoted_primary_key_column_full_name)
+                .having("COUNT(#{column}) > 1")
+                .order(primary_column_name => :asc)
+                .first.nil?
             end
           end
 
@@ -35,7 +36,7 @@ module CollectiveIdea
           end
 
           def all_roots_valid_by_scope?(roots_to_validate)
-            roots_grouped_by_scope(roots_to_validate).all? do |scope, grouped_roots|
+            roots_grouped_by_scope(roots_to_validate).all? do |_scope, grouped_roots|
               each_root_valid?(grouped_roots)
             end
           end
@@ -53,10 +54,11 @@ module CollectiveIdea
           end
 
           private
+
           def roots_grouped_by_scope(roots_to_group)
-            roots_to_group.group_by {|record|
-              scope_column_names.collect {|col| record.send(col) }
-            }
+            roots_to_group.group_by do |record|
+              scope_column_names.collect { |col| record.send(col) }
+            end
           end
 
           def roots_reordered_by_column(roots_to_reorder, column)
@@ -72,7 +74,7 @@ module CollectiveIdea
           def scope_string
             Array(acts_as_nested_set_options[:scope]).map do |c|
               connection.quote_column_name(c)
-            end.push(nil).join(", ")
+            end.push(nil).join(', ')
           end
         end
       end

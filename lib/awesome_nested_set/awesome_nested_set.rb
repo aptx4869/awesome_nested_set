@@ -1,10 +1,11 @@
+# frozen_string_literal: true
+
 require 'awesome_nested_set/columns'
 require 'awesome_nested_set/model'
 
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
-
       # This provides Nested Set functionality. Nested Set is a smart way to implement
       # an _ordered_ tree, with the added feature that you can select the children and all of their
       # descendants with a single query. The drawback is that insertion or move need some complex
@@ -62,6 +63,7 @@ module CollectiveIdea #:nodoc:
       end
 
       private
+
       def acts_as_nested_set_define_callbacks!
         # on creation, set automatically lft and rgt to the end of the tree
         before_create  :set_default_left_and_right
@@ -74,17 +76,18 @@ module CollectiveIdea #:nodoc:
 
       def acts_as_nested_set_relate_children!
         has_many_children_options = {
-          :class_name => self.base_class.to_s,
-          :foreign_key => parent_column_name,
-          :primary_key => primary_column_name,
-          :inverse_of => (:parent unless acts_as_nested_set_options[:polymorphic]),
+          class_name: base_class.to_s,
+          foreign_key: parent_column_name,
+          primary_key: primary_column_name,
+          inverse_of: (:parent unless acts_as_nested_set_options[:polymorphic])
         }
 
         # Add callbacks, if they were supplied.. otherwise, we don't want them.
-        [:before_add, :after_add, :before_remove, :after_remove].each do |ar_callback|
+        %i(before_add after_add before_remove after_remove).each do |ar_callback|
+          next unless acts_as_nested_set_options[ar_callback]
           has_many_children_options.update(
             ar_callback => acts_as_nested_set_options[ar_callback]
-          ) if acts_as_nested_set_options[ar_callback]
+          )
         end
 
         has_many :children, -> { order(order_column => :asc) },
@@ -93,13 +96,13 @@ module CollectiveIdea #:nodoc:
 
       def acts_as_nested_set_relate_parent!
         options = {
-          :class_name => self.base_class.to_s,
-          :foreign_key => parent_column_name,
-          :primary_key => primary_column_name,
-          :counter_cache => acts_as_nested_set_options[:counter_cache],
-          :inverse_of => (:children unless acts_as_nested_set_options[:polymorphic]),
-          :polymorphic => acts_as_nested_set_options[:polymorphic],
-          :touch => acts_as_nested_set_options[:touch]
+          class_name: base_class.to_s,
+          foreign_key: parent_column_name,
+          primary_key: primary_column_name,
+          counter_cache: acts_as_nested_set_options[:counter_cache],
+          inverse_of: (:children unless acts_as_nested_set_options[:polymorphic]),
+          polymorphic: acts_as_nested_set_options[:polymorphic],
+          touch: acts_as_nested_set_options[:touch]
         }
         options[:optional] = true if ActiveRecord::VERSION::MAJOR >= 5
         belongs_to :parent, options
@@ -107,15 +110,15 @@ module CollectiveIdea #:nodoc:
 
       def acts_as_nested_set_default_options
         {
-          :parent_column => 'parent_id',
-          :primary_column => 'id',
-          :left_column => 'lft',
-          :right_column => 'rgt',
-          :depth_column => 'depth',
-          :dependent => :delete_all, # or :destroy
-          :polymorphic => false,
-          :counter_cache => false,
-          :touch => false
+          parent_column: 'parent_id',
+          primary_column: 'id',
+          left_column: 'lft',
+          right_column: 'rgt',
+          depth_column: 'depth',
+          dependent: :delete_all, # or :destroy
+          polymorphic: false,
+          counter_cache: false,
+          touch: false
         }.freeze
       end
 

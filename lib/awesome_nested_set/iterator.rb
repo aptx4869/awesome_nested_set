@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:

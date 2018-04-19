@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'active_support/lazy_load_hooks'
 require 'awesome_nested_set/awesome_nested_set'
 

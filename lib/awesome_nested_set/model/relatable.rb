@@ -1,9 +1,10 @@
+# frozen_string_literal: true
+
 module CollectiveIdea
   module Acts
     module NestedSet
       module Model
         module Relatable
-
           # Returns an collection of all parents
           def ancestors
             without_self self_and_ancestors
@@ -11,9 +12,9 @@ module CollectiveIdea
 
           # Returns the collection of all parents and self
           def self_and_ancestors
-            nested_set_scope.
-              where(arel_table[left_column_name].lteq(left)).
-              where(arel_table[right_column_name].gteq(right))
+            nested_set_scope
+              .where(arel_table[left_column_name].lteq(left))
+              .where(arel_table[right_column_name].gteq(right))
           end
 
           # Returns the collection of all children of the parent, except self
@@ -69,7 +70,7 @@ module CollectiveIdea
           # Check if other model is in the same scope
           def same_scope?(other)
             Array(acts_as_nested_set_options[:scope]).all? do |attr|
-              self.send(attr) == other.send(attr)
+              send(attr) == other.send(attr)
             end
           end
 
@@ -102,10 +103,12 @@ module CollectiveIdea
           end
 
           def determine_depth(node = self, nesting = 0)
-            while (association = node.association(:parent)).loaded? && association.target
-              nesting += 1
-              node = node.parent
-            end if node.respond_to?(:association)
+            if node.respond_to?(:association)
+              while (association = node.association(:parent)).loaded? && association.target
+                nesting += 1
+                node = node.parent
+              end
+            end
 
             [node, nesting]
           end
@@ -113,7 +116,6 @@ module CollectiveIdea
           def within_node?(node, within)
             node.left < within.left && within.left < node.right
           end
-
         end
       end
     end
