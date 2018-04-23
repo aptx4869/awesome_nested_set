@@ -64,7 +64,9 @@ module CollectiveIdea #:nodoc:
           end
 
           def leaves
-            nested_set_scope.where "#{quoted_right_column_full_name} - #{quoted_left_column_full_name} = 1"
+            nested_set_scope.where(
+              "#{quoted_right_column_full_name} - #{quoted_left_column_full_name} = 1"
+            )
           end
 
           def left_of(node)
@@ -96,9 +98,10 @@ module CollectiveIdea #:nodoc:
           def roots
             nested_set_scope.children_of nil
           end
-        end # end class methods
+        end
 
-        # Any instance method that returns a collection makes use of Rails 2.1's named_scope (which is bundled for Rails 2.0), so it can be treated as a finder.
+        # Any instance method that returns a collection makes use of Rails 2.1's named_scope
+        # (which is bundled for Rails 2.0), so it can be treated as a finder.
         #
         #   category.self_and_descendants.count
         #   category.ancestors.find(:all, :conditions => "name like '%foo%'")
@@ -170,7 +173,12 @@ module CollectiveIdea #:nodoc:
 
         def without_self(scope)
           return scope if new_record?
-          scope.where(["#{self.class.quoted_table_name}.#{self.class.quoted_primary_column_name} != ?", primary_id])
+          scope.where(
+            [
+              "#{self.class.quoted_table_name}.#{self.class.quoted_primary_column_name} != ?",
+              primary_id
+            ]
+          )
         end
 
         def store_new_parent
@@ -190,11 +198,11 @@ module CollectiveIdea #:nodoc:
 
         def right_most_bound
           @right_most_bound ||= begin
-            return 0 if right_most_node.nil?
+                                  return 0 if right_most_node.nil?
 
-            right_most_node.lock!
-            right_most_node[right_column_name] || 0
-          end
+                                  right_most_node.lock!
+                                  right_most_node[right_column_name] || 0
+                                end
         end
 
         def set_depth!
@@ -221,16 +229,16 @@ module CollectiveIdea #:nodoc:
         end
 
         def update_depth(depth)
-          nested_set_scope.primary_key_scope(primary_id)
-                          .update_all(["#{quoted_depth_column_name} = ?", depth])
+          nested_set_scope
+            .primary_key_scope(primary_id)
+            .update_all(["#{quoted_depth_column_name} = ?", depth])
           self[depth_column_name] = depth
         end
 
         def change_descendants_depth!(diff)
-          if !leaf? && diff != 0
-            sign = '++-'[diff <=> 0]
-            descendants.update_all("#{quoted_depth_column_name} = #{quoted_depth_column_name} #{sign} #{diff.abs}")
-          end
+          return unless !leaf? && diff != 0
+          sign = '++-'[diff <=> 0]
+          descendants.update_all("#{quoted_depth_column_name} = #{quoted_depth_column_name} #{sign} #{diff.abs}")
         end
 
         def update_counter_cache
@@ -242,9 +250,8 @@ module CollectiveIdea #:nodoc:
           end
 
           # Increase the counter for all new parents
-          if new_parent = reload.parent
-            self.class.increment_counter(acts_as_nested_set_options[:counter_cache], new_parent)
-          end
+          return unless new_parent = reload.parent
+          self.class.increment_counter(acts_as_nested_set_options[:counter_cache], new_parent)
         end
 
         def set_default_left_and_right

@@ -11,7 +11,7 @@ module CollectiveIdea #:nodoc:
         end
 
         def valid?
-          query.count == 0
+          query.count.zero?
         end
 
         private
@@ -19,8 +19,11 @@ module CollectiveIdea #:nodoc:
         attr_reader :model, :parent
         attr_accessor :scope
 
-        delegate :parent_column_name, :primary_column_name, :primary_key, :left_column_name, :right_column_name, :arel_table,
-                 :quoted_table_name, :quoted_parent_column_full_name, :quoted_left_column_full_name, :quoted_right_column_full_name, :quoted_left_column_name, :quoted_right_column_name, :quoted_primary_column_name,
+        delegate :parent_column_name, :primary_column_name, :primary_key, :left_column_name,
+                 :right_column_name, :arel_table, :quoted_table_name,
+                 :quoted_parent_column_full_name, :quoted_left_column_full_name,
+                 :quoted_right_column_full_name, :quoted_left_column_name,
+                 :quoted_right_column_name, :quoted_primary_column_name,
                  to: :model
 
         def query
@@ -29,7 +32,11 @@ module CollectiveIdea #:nodoc:
         end
 
         def join_scope
-          join_arel = arel_table.join(parent, Arel::Nodes::OuterJoin).on(parent[primary_column_name].eq(arel_table[parent_column_name]))
+          join_arel =
+            arel_table
+            .join(parent, Arel::Nodes::OuterJoin)
+            .on(parent[primary_column_name]
+            .eq(arel_table[parent_column_name]))
           self.scope = scope.joins(join_arel.join_sources)
         end
 
@@ -55,7 +62,10 @@ module CollectiveIdea #:nodoc:
         end
 
         def bounds_outside_parent
-          arel_table[left_column_name].lteq(parent[left_column_name]).or(arel_table[right_column_name].gteq(parent[right_column_name]))
+          arel_table[left_column_name]
+            .lteq(parent[left_column_name])
+            .or(arel_table[right_column_name]
+            .gteq(parent[right_column_name]))
         end
       end
     end

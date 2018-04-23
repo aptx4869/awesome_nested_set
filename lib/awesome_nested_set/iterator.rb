@@ -12,17 +12,18 @@ module CollectiveIdea #:nodoc:
 
         def each_with_level
           path = [nil]
-          objects.each do |o|
-            if o.parent_id != path.last
+          objects.each do |object|
+            parent_id_ = object.parent_id
+            if parent_id_ != path.last
               # we are on a new level, did we descend or ascend?
-              if path.include?(o.parent_id)
+              if path.include?(parent_id_)
                 # remove wrong tailing paths elements
-                path.pop while path.last != o.parent_id
+                path.pop while path.last != parent_id_
               else
-                path << o.parent_id
+                path << parent_id_
               end
             end
-            yield(o, path.length - 1)
+            yield(object, path.length - 1)
           end
         end
       end

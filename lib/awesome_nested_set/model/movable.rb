@@ -67,8 +67,10 @@ module CollectiveIdea #:nodoc:
           end
 
           # Order children in a nested set by an attribute
-          # Can order by any attribute class that uses the Comparable mixin, for example a string or integer
-          # Usage example when sorting categories alphabetically: @new_category.move_to_ordered_child_of(@root, "name")
+          # Can order by any attribute class that uses the Comparable mixin,
+          # for example a string or integer
+          # Usage example when sorting categories alphabetically:
+          # @new_category.move_to_ordered_child_of(@root, "name")
           def move_to_ordered_child_of(parent, order_attribute, ascending = true)
             move_to_root && return unless parent
 
@@ -90,8 +92,8 @@ module CollectiveIdea #:nodoc:
             parent.children.each do |n|
               if ascending
                 left = n if n.send(order_attribute) < send(order_attribute)
-              else
-                left = n if n.send(order_attribute) > send(order_attribute)
+              elsif n.send(order_attribute) > send(order_attribute)
+                left = n
               end
             end
             left

@@ -10,7 +10,8 @@ module CollectiveIdea
           # Rebuilds the left & rights if unset or invalid.
           # Also very useful for converting from acts_as_tree.
           def rebuild!(validate_nodes = true)
-            # default_scope with order may break database queries so we do all operation without scope
+            # default_scope with order may break database queries
+            # so we do all operation without scope
             unscoped do
               Tree.new(self, validate_nodes).rebuild!
             end

@@ -18,7 +18,7 @@ module CollectiveIdea #:nodoc:
           bound, other_bound = get_boundaries
 
           # there would be no change
-          return if bound == right || bound == left
+          return if [right, left].include? bound
 
           # we have defined the boundaries of two non-overlapping intervals,
           # so sorting puts both the intervals and their boundaries in order
@@ -35,7 +35,8 @@ module CollectiveIdea #:nodoc:
 
         delegate :left, :right, :left_column_name, :right_column_name,
                  :quoted_left_column_name, :quoted_right_column_name,
-                 :quoted_parent_column_name, :parent_column_name, :nested_set_scope_without_default_scope,
+                 :quoted_parent_column_name, :parent_column_name,
+                 :nested_set_scope_without_default_scope,
                  :primary_column_name, :quoted_primary_column_name, :primary_id,
                  to: :instance
 
@@ -43,8 +44,9 @@ module CollectiveIdea #:nodoc:
         delegate :base_class, to: :instance_class, prefix: :instance
 
         def where_statement(left_bound, right_bound)
-          instance_arel_table[left_column_name].in(left_bound..right_bound)
-                                               .or(instance_arel_table[right_column_name].in(left_bound..right_bound))
+          instance_arel_table[left_column_name]
+            .in(left_bound..right_bound)
+            .or(instance_arel_table[right_column_name].in(left_bound..right_bound))
         end
 
         def conditions(a, b, c, d)
@@ -114,9 +116,8 @@ module CollectiveIdea #:nodoc:
         end
 
         def prevent_impossible_move
-          if !root && !instance.move_possible?(target)
-            raise ImpossibleMove, 'Impossible move, target node cannot be inside moved tree.'
-          end
+          return if root || instance.move_possible?(target)
+          raise ImpossibleMove, 'Impossible move, target node cannot be inside moved tree.'
         end
 
         def target_bound

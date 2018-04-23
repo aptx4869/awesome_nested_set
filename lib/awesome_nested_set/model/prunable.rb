@@ -28,7 +28,8 @@ module CollectiveIdea #:nodoc:
               # update lefts and rights for remaining nodes
               update_siblings_for_remaining_nodes
 
-              # Reload is needed because children may have updated their parent (self) during deletion.
+              # Reload is needed
+              # because children may have updated their parent (self) during deletion.
               reload
 
               # Don't allow multiple calls to destroy to corrupt the set
@@ -48,7 +49,7 @@ module CollectiveIdea #:nodoc:
             elsif acts_as_nested_set_options[:dependent] == :restrict_with_error
               unless leaf?
                 record = self.class.human_attribute_name(:children).downcase
-                errors.add(:base, :"restrict_dependent_destroy.#{Rails::VERSION::MAJOR < 5 ? 'many' : 'has_many'}", record: record)
+                errors.add(:base, :"restrict_dependent_destroy.has_many", record: record)
                 return false
               end
               true
