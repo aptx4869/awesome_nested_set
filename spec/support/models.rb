@@ -62,7 +62,7 @@ class Category < ApplicationRecord
   def recurse(&block)
     yield self, lambda {
       children.each do |child|
-        child.recurse &block
+        child.recurse(&block)
       end
     }
   end
@@ -143,7 +143,7 @@ class User < ApplicationRecord
   def recurse(&block)
     yield self, lambda {
       children.each do |child|
-        child.recurse &block
+        child.recurse(&block)
       end
     }
   end

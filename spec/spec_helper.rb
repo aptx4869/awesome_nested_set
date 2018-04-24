@@ -8,7 +8,7 @@ require 'pry'
 
 require 'logger'
 require 'active_record'
-ActiveRecord::Base.logger = Logger.new(plugin_test_dir + '/debug.log')
+ActiveRecord::Base.logger = Logger.new(File.expand_path('../log', __dir__) + '/debug.log')
 
 require 'yaml'
 require 'erb'
@@ -32,6 +32,16 @@ require 'database_cleaner'
 RSpec.configure do |config|
   config.fixture_path = "#{plugin_test_dir}/fixtures"
   config.use_transactional_fixtures = true
+
+  config.before(:suite) do
+    DatabaseCleaner[:mongoid].strategy = :truncation
+    DatabaseCleaner[:active_record].strategy = :transaction
+  end
+
+  config.before(:context) do
+    DatabaseCleaner.clean
+  end
+
   config.after(:suite) do
     unless /sqlite/ === ENV['DB']
       Combustion::Database.drop_database(ActiveRecord::Base.configurations[ENV['DB']])

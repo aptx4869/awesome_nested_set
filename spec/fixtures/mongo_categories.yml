@@ -1,0 +1,34 @@
+top_level:
+  id: '5ade97d90aa0120300483257'
+  name: Top Level
+  lft: 1
+  rgt: 10
+child_1:
+  id: '5ade97ee0aa0120300483259'
+  name: Child 1
+  parent_id: '5ade97d90aa0120300483257'
+  lft: 2
+  rgt: 3
+child_2:
+  id: '5ade97ed0aa0120300483258'
+  name: Child 2
+  parent_id: '5ade97d90aa0120300483257'
+  lft: 4
+  rgt: 7
+child_2_1:
+  id: '5ade97ef0aa012030048325a'
+  name: Child 2.1
+  parent_id: '5ade97ed0aa0120300483258'
+  lft: 5
+  rgt: 6
+child_3:
+  id: '5ade97f00aa012030048325b'
+  name: Child 3
+  parent_id: '5ade97d90aa0120300483257'
+  lft: 8
+  rgt: 9
+top_level_2:
+  id: '5ade97f00aa012030048325c'
+  name: Top Level 2
+  lft: 11
+  rgt: 12

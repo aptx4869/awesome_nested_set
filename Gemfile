@@ -5,6 +5,7 @@ source 'https://rubygems.org'
 gemspec
 
 platforms :ruby do
+  gem 'mongoid', '>= 6.0'
   gem 'mysql2', '< 0.4.0'
   gem 'pg', '0.21.0'
   gem 'sqlite3'
