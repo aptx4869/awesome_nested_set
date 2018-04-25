@@ -5,7 +5,7 @@ require 'awesome_nested_set/move'
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
-      module Model
+      module ActiveRecordModel
         module Movable
           def move_possible?(target)
             self != target && # Can't target self

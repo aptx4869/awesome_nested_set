@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'awesome_nested_set/columns'
-require 'awesome_nested_set/model'
+require 'awesome_nested_set/active_record_model'
 
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
@@ -71,7 +71,7 @@ module CollectiveIdea #:nodoc:
       def acts_as_nested_set(options = {})
         acts_as_nested_set_parse_options! options
 
-        include Model
+        include ActiveRecordModel
         include Columns
         extend Columns
 

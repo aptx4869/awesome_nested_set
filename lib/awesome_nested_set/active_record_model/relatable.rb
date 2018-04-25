@@ -3,7 +3,7 @@
 module CollectiveIdea
   module Acts
     module NestedSet
-      module Model
+      module ActiveRecordModel
         module Relatable
           # Returns an collection of all parents
           def ancestors

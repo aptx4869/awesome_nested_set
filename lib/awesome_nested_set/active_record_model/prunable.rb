@@ -3,7 +3,7 @@
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
-      module Model
+      module ActiveRecordModel
         module Prunable
           # Prunes a branch off of the tree, shifting all of the elements on the right
           # back to the left so the counts still work.

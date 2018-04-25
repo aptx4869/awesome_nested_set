@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
-require 'awesome_nested_set/model/prunable'
-require 'awesome_nested_set/model/movable'
-require 'awesome_nested_set/model/transactable'
-require 'awesome_nested_set/model/relatable'
-require 'awesome_nested_set/model/rebuildable'
-require 'awesome_nested_set/model/validatable'
+require 'awesome_nested_set/active_record_model/prunable'
+require 'awesome_nested_set/active_record_model/movable'
+require 'awesome_nested_set/active_record_model/transactable'
+require 'awesome_nested_set/active_record_model/relatable'
+require 'awesome_nested_set/active_record_model/rebuildable'
+require 'awesome_nested_set/active_record_model/validatable'
 require 'awesome_nested_set/iterator'
 
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
-      module Model
+      module ActiveRecordModel
         extend ActiveSupport::Concern
 
         included do
@@ -149,7 +149,7 @@ module CollectiveIdea #:nodoc:
             end
           end
 
-          self.class.base_class.nested_set_scope options
+          self.class.acts_as_nested_set_base_class.nested_set_scope options
         end
 
         # Separate an other `nested_set_scope` for unscoped model
@@ -158,7 +158,7 @@ module CollectiveIdea #:nodoc:
         # And class level `nested_set_scope` seems just for query `root` `child` .. etc
         # I think we don't have to provide unscoped `nested_set_scope` in class level.
         def nested_set_scope_without_default_scope(*args)
-          self.class.base_class.unscoped do
+          self.class.acts_as_nested_set_base_class.unscoped do
             nested_set_scope(*args)
           end
         end
@@ -269,7 +269,7 @@ module CollectiveIdea #:nodoc:
         end
 
         def reload_target(target, position)
-          if target.is_a? self.class.base_class
+          if target.is_a? self.class.acts_as_nested_set_base_class
             target.reload
           elsif position != :root
             nested_set_scope_without_default_scope.where(primary_column_name => target).first!

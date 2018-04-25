@@ -5,7 +5,7 @@ require 'awesome_nested_set/tree'
 module CollectiveIdea
   module Acts
     module NestedSet
-      module Model
+      module ActiveRecordModel
         module Rebuildable
           # Rebuilds the left & rights if unset or invalid.
           # Also very useful for converting from acts_as_tree.

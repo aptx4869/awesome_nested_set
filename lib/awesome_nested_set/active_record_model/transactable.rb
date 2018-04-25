@@ -3,7 +3,7 @@
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
-      module Model
+      module ActiveRecordModel
         module Transactable
           class OpenTransactionsIsNotZero < ActiveRecord::StatementInvalid
           end
