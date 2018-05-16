@@ -1,42 +1,42 @@
 scope1:
   id: '5ade9dcb0aa0127f6adb56fe'
   body: Top Level
-  lft: 1
-  rgt: 10
+  '&l': 1
+  '&r': 10
   notable_id: '5ade97d90aa0120300483257'
   notable_type: Category
   user_id: '5ade9d930aa0127f6adb56f8'
 child_1:
   id: '5ade9dcc0aa0127f6adb56ff'
   body: Child 1
-  parent_id: '5ade9dcb0aa0127f6adb56fe'
-  lft: 2
-  rgt: 3
+  '&p': '5ade9dcb0aa0127f6adb56fe'
+  '&l': 2
+  '&r': 3
   notable_id: '5ade97d90aa0120300483257'
   notable_type: Category
   user_id: '5ade9d930aa0127f6adb56f8'
 child_2:
   id: '5ade9dcd0aa0127f6adb5700'
   body: Child 2
-  parent_id: '5ade9dcb0aa0127f6adb56fe'
-  lft: 4
-  rgt: 7
+  '&p': '5ade9dcb0aa0127f6adb56fe'
+  '&l': 4
+  '&r': 7
   notable_id: '5ade97d90aa0120300483257'
   notable_type: Category
   user_id: '5ade9d930aa0127f6adb56f8'
 child_3:
   id: '5ade9dcd0aa0127f6adb5701'
   body: Child 3
-  parent_id: '5ade9dcb0aa0127f6adb56fe'
-  lft: 8
-  rgt: 9
+  '&p': '5ade9dcb0aa0127f6adb56fe'
+  '&l': 8
+  '&r': 9
   notable_id: '5ade97d90aa0120300483257'
   notable_type: Category
   user_id: '5ade9d930aa0127f6adb56f8'
 scope2:
   id: '5ade9dce0aa0127f6adb5702'
   body: Top Level 2
-  lft: 1
-  rgt: 2
+  '&l': 1
+  '&r': 2
   notable_id: '5ade9d930aa0127f6adb56f7'
   notable_type: Departments

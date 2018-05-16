@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'awesome_nested_set/active_record_model/set_validator'
+require 'awesome_nested_set/mongoid_model/set_validator'
 
 module CollectiveIdea
   module Acts
     module NestedSet
-      module ActiveRecordModel
+      module MongoidModel
         module Validatable
           def valid?
             left_and_rights_valid? && no_duplicates_for_columns? && all_roots_valid?
@@ -16,14 +16,32 @@ module CollectiveIdea
           end
 
           def no_duplicates_for_columns?
-            [quoted_left_column_full_name, quoted_right_column_full_name].all? do |column|
-              # No duplicates
-              select("#{scope_string}#{column}, COUNT(#{column}) as _count")
-                .group("#{scope_string}#{column}", quoted_primary_column_full_name)
-                .having("COUNT(#{column}) > 1")
-                .order(primary_column_name => :asc)
-                .first.nil?
-            end
+            collection.aggregate(
+              [
+                {
+                  '$project': {
+                    primary_column_name => 1,
+                    left_column_name    => 1,
+                    right_column_name   => 1
+                  }
+                },
+                {
+                  '$group': {
+                    _id: {
+                      left_column_name => "$#{left_column_name}",
+                      right_column_name => "$#{right_column_name}"
+                    },
+                    left: {
+                      '$sum': { '$cond': { if: "$#{left_column_name}", then: 1, else: 0 } }
+                    },
+                    right: {
+                      '$sum': { '$cond': { if: "$#{right_column_name}", then: 1, else: 0 } }
+                    }
+                  }
+                },
+                { '$match': { '$or': [{ left: { '$gt': 1 } }, { right: { '$gt': 1 } }] } }
+              ]
+            ).none?
           end
 
           # Wrapper for each_root_valid? that can deal with scope.
@@ -62,8 +80,8 @@ module CollectiveIdea
           end
 
           def roots_reordered_by_column(roots_to_reorder, column)
-            if roots_to_reorder.respond_to?(:reorder) # ActiveRecord's relation
-              roots_to_reorder.reorder(column)
+            if roots_to_reorder.respond_to?(:reorder) # Mongoid's relation
+              roots_to_reorder.reorder(order_column => 1)
             elsif roots_to_reorder.respond_to?(:sort) # Array
               roots_to_reorder.sort { |a, b| a.send(column) <=> b.send(column) }
             else

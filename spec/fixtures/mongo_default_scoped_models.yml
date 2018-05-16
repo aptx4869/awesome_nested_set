@@ -1,31 +1,31 @@
 top_level:
   id: '5ade9d910aa0127f6adb56f2'
   name: Top Level
-  lft: 1
-  rgt: 4
+  '&l': 1
+  '&r': 4
   draft: false
 child_1:
   id: '5ade9d910aa0127f6adb56f3'
   name: Child 1
-  parent_id: '5ade9d910aa0127f6adb56f2'
-  lft: 2
-  rgt: 3
+  '&p': '5ade9d910aa0127f6adb56f2'
+  '&l': 2
+  '&r': 3
   draft: false
 top_level_2:
   id: '5ade9d920aa0127f6adb56f4'
   name: Top Level 2
-  lft: 5
-  rgt: 6
+  '&l': 5
+  '&r': 6
   draft: false
 top_level_3:
   id: '5ade9d920aa0127f6adb56f5'
   name: Top Level 3
-  lft: 7
-  rgt: 8
+  '&l': 7
+  '&r': 8
   draft: false
 old_root:
   id: '5ade9d930aa0127f6adb56f6'
   name: Top Level
-  lft: 1
-  rgt: 4
+  '&l': 1
+  '&r': 4
   draft: true

@@ -1,24 +1,23 @@
 # frozen_string_literal: true
 
-require 'awesome_nested_set/columns'
-require 'awesome_nested_set/active_record_model/prunable'
-require 'awesome_nested_set/active_record_model/movable'
-require 'awesome_nested_set/active_record_model/transactable'
-require 'awesome_nested_set/active_record_model/relatable'
-require 'awesome_nested_set/active_record_model/rebuildable'
-require 'awesome_nested_set/active_record_model/validatable'
+require 'awesome_nested_set/fields'
+require 'awesome_nested_set/mongoid_model/prunable'
+require 'awesome_nested_set/mongoid_model/movable'
+require 'awesome_nested_set/mongoid_model/transactable'
+require 'awesome_nested_set/mongoid_model/relatable'
+require 'awesome_nested_set/mongoid_model/rebuildable'
+require 'awesome_nested_set/mongoid_model/validatable'
 require 'awesome_nested_set/iterator'
 
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
-      module ActiveRecordModel
+      module MongoidModel
         extend ActiveSupport::Concern
 
         included do
-          delegate :quoted_table_name, :arel_table, to: self
-          include Columns
-          extend Columns
+          include Fields
+          extend Fields
           extend Validatable
           extend Rebuildable
           include Movable
@@ -51,7 +50,7 @@ module CollectiveIdea #:nodoc:
           end
 
           def children_of(parent_id)
-            where arel_table[parent_column_name].eq(parent_id)
+            where(parent_column_name => parent_id)
           end
 
           # Iterates over tree elements and determines the current level in the tree.
@@ -68,30 +67,30 @@ module CollectiveIdea #:nodoc:
 
           def leaves
             nested_set_scope.where(
-              "#{quoted_right_column_full_name} - #{quoted_left_column_full_name} = 1"
+              "this['#{right_column_name}'] - this['#{left_column_name}'] == 1"
             )
           end
 
           def left_of(node)
-            where arel_table[left_column_name].lt(node)
+            lt left_column_name => node
           end
 
           def left_of_right_side(node)
-            where arel_table[right_column_name].lteq(node)
+            lte right_column_name => node
           end
 
           def right_of(node)
-            where arel_table[left_column_name].gteq(node)
+            gte left_column_name => node
           end
 
           def nested_set_scope(options = {})
-            options = { order: { order_column => :asc } }.merge(options)
+            options = { order: { order_column => 1 } }.merge(options)
 
             where(options[:conditions]).order(options.delete(:order))
           end
 
           def primary_key_scope(id)
-            where arel_table[primary_column_name].eq(id)
+            where primary_column_name => id
           end
 
           def root
@@ -143,7 +142,7 @@ module CollectiveIdea #:nodoc:
         end
 
         # All nested set queries should use this nested_set_scope, which
-        # performs finds on the base ActiveRecord class, using the :scope
+        # performs finds on the base Mongoid class, using the :scope
         # declared in the acts_as_nested_set declaration.
         def nested_set_scope(options = {})
           if (scopes = Array(acts_as_nested_set_options[:scope])).any?
@@ -176,12 +175,7 @@ module CollectiveIdea #:nodoc:
 
         def without_self(scope)
           return scope if new_record?
-          scope.where(
-            [
-              "#{self.class.quoted_table_name}.#{self.class.quoted_primary_column_name} != ?",
-              primary_id
-            ]
-          )
+          scope.ne(primary_column_name => primary_id)
         end
 
         def store_new_parent
@@ -189,8 +183,8 @@ module CollectiveIdea #:nodoc:
           true # force callback to return true
         end
 
-        def has_depth_column?
-          nested_set_scope.column_names.map(&:to_s).include?(depth_column_name.to_s)
+        def with_depth_column?
+          nested_set_scope.serializers.keys.map(&:to_s).include?(depth_column_name.to_s)
         end
 
         def right_most_node
@@ -203,13 +197,13 @@ module CollectiveIdea #:nodoc:
           @right_most_bound ||= begin
                                   return 0 if right_most_node.nil?
 
-                                  right_most_node.lock!
+                                  right_most_node
                                   right_most_node[right_column_name] || 0
                                 end
         end
 
         def set_depth!
-          return unless has_depth_column?
+          return unless with_depth_column?
 
           in_tenacious_transaction do
             reload
@@ -218,11 +212,11 @@ module CollectiveIdea #:nodoc:
         end
 
         def set_depth_for_self_and_descendants!
-          return unless has_depth_column?
+          return unless with_depth_column?
 
           in_tenacious_transaction do
             reload
-            self_and_descendants.select(primary_column_name).lock(true)
+            # self_and_descendants.select(primary_column_name).lock(true)
             old_depth = self[depth_column_name] || 0
             new_depth = level
             update_depth(new_depth)
@@ -234,14 +228,14 @@ module CollectiveIdea #:nodoc:
         def update_depth(depth)
           nested_set_scope
             .primary_key_scope(primary_id)
-            .update_all(["#{quoted_depth_column_name} = ?", depth])
+            .update_all(depth_column_name => depth)
           self[depth_column_name] = depth
         end
 
         def change_descendants_depth!(diff)
           return unless !leaf? && diff != 0
-          sign = '++-'[diff <=> 0]
-          descendants.update_all("#{quoted_depth_column_name} = #{quoted_depth_column_name} #{sign} #{diff.abs}")
+          depth_increment = diff.abs * [1, 1, -1][diff <=> 0]
+          descendants.inc(depth_column_name => depth_increment)
         end
 
         def update_counter_cache
@@ -265,17 +259,14 @@ module CollectiveIdea #:nodoc:
 
         # reload left, right, and parent
         def reload_nested_set
-          reload(
-            select: "#{quoted_left_column_full_name}, #{quoted_right_column_full_name}, #{quoted_parent_column_full_name}",
-            lock: true
-          )
+          reload
         end
 
         def reload_target(target, position)
           if target.is_a? self.class.acts_as_nested_set_base_class
             target.reload
           elsif position != :root
-            nested_set_scope_without_default_scope.where(primary_column_name => target).first!
+            nested_set_scope_without_default_scope.where(primary_column_name => target).first
           end
         end
       end

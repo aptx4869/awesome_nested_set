@@ -7,6 +7,10 @@ ActiveSupport.on_load(:active_record) do
   ActiveRecord::Base.send :extend, CollectiveIdea::Acts::NestedSet
 end
 
+ActiveSupport.on_load(:mongoid) do
+  Mongoid::Document::ClassMethods.send :include, CollectiveIdea::Acts::NestedSet
+end
+
 ActiveSupport.on_load(:action_view) do
   require 'awesome_nested_set/helper'
   ActionView::Base.send :include, CollectiveIdea::Acts::NestedSet::Helper

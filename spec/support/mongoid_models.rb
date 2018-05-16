@@ -1,55 +1,42 @@
 # frozen_string_literal: true
 
-require 'mongoid'
-
-Mongoid.configure do |config|
-  config.connect_to 'nested_set_test'
-  # config.logger = Logger.new($stdout, :info)
-end
-
 # Enable the acts_as_nested_set method
 class MongoNote
   include Mongoid::Document
-  acts_as_nested_set scope: %i(notable_id notable_type)
-  field :body, type: Integer
-  field :parent_id, type: BSON::ObjectId
-  field :lft, type: Integer
-  field :rgt, type: Integer
-  field :depth, type: Integer
+  field :body, type: String
+  field '&d', as: :depth, type: Integer
   field :notable_id, type: BSON::ObjectId
   field :notable_type, type: String
-  field :user_id, type: BSON::ObjectId
+  acts_as_nested_set scope: %i(notable_id notable_type)
 
-  belongs_to :user, inverse_of: :notes, class_name: 'MongoUser'
+  belongs_to :user, inverse_of: :notes, class_name: 'MongoUser', required: false
 end
 
 class MongoDefaultScopedModel
   include Mongoid::Document
-  acts_as_nested_set
   field :name, type: String
-  field :parent_id, type: BSON::ObjectId
-  field :lft, type: Integer
-  field :rgt, type: Integer
-  field :depth, type: Integer
+  field '&d', as: :depth, type: Integer
   field :draft, type: Boolean, default: false
+  acts_as_nested_set
 end
 
 class MongoDefault
   include Mongoid::Document
 
-  store_in collection: 'categories'
+  store_in collection: 'mongo_categories'
   acts_as_nested_set
 end
 
 class MongoScopedCategory
   include Mongoid::Document
-  store_in collection: 'categories'
+  store_in collection: 'mongo_categories'
+  field :organization_id, type: BSON::ObjectId
   acts_as_nested_set scope: :organization
 end
 
 class MongoOrderedCategory
   include Mongoid::Document
-  store_in collection: 'categories'
+  store_in collection: 'mongo_categories'
   acts_as_nested_set order_column: 'name'
 end
 
@@ -69,10 +56,7 @@ end
 class MongoCategory
   include Mongoid::Document
   field :name, type: String
-  field :parent_id, type: BSON::ObjectId
-  field :lft, type: Integer
-  field :rgt, type: Integer
-  field :depth, type: Integer
+  field '&d', as: :depth, type: Integer
   field :organization_id, type: BSON::ObjectId
   acts_as_nested_set
 
@@ -107,18 +91,15 @@ end
 
 class MongoThing
   include Mongoid::Document
-  acts_as_nested_set counter_cache: 'children_count'
-  field :body, type: Integer
-  field :parent_id, type: BSON::ObjectId
-  field :lft, type: Integer
-  field :rgt, type: Integer
-  field :depth, type: Integer
+  field :body, type: String
+  field '&d', as: :depth, type: Integer
   field :children_count, type: Integer, default: 0
+  acts_as_nested_set counter_cache: 'children_count'
 end
 
 class MongoDefaultWithCallbacks
   include Mongoid::Document
-  store_in collection: 'categories'
+  store_in collection: 'mongo_categories'
 
   attr_accessor :before_add, :after_add, :before_remove, :after_remove
 
@@ -139,57 +120,45 @@ end
 class MongoBroken
   include Mongoid::Document
   field :name, type: String
-  field :parent_id, type: BSON::ObjectId
-  field :lft, type: Integer
-  field :rgt, type: Integer
-  field :depth, type: Integer
+  field '&d', as: :depth, type: Integer
   acts_as_nested_set
 end
 
 class MongoOrder
   include Mongoid::Document
   field :name, type: String
-  field :parent_id, type: BSON::ObjectId
-  field :lft, type: Integer
-  field :rgt, type: Integer
-  field :depth, type: Integer
+  field '&d', as: :depth, type: Integer
   acts_as_nested_set
 
-  default_scope -> { order(name: :asc) }
+  default_scope -> { order(name: 1) }
 end
 
 class MongoPosition
   include Mongoid::Document
-  acts_as_nested_set
 
   field :name, type: String
-  field :parent_id, type: BSON::ObjectId
-  field :lft, type: Integer
-  field :rgt, type: Integer
-  field :depth, type: Integer
+  field '&d', as: :depth, type: Integer
   field :position, type: Integer
-  default_scope -> { order(position: :asc) }
+  default_scope -> { order(position: 1) }
+  acts_as_nested_set
 end
 
 class MongoNoDepth
   include Mongoid::Document
   field :name, type: String
-  field :parent_id, type: BSON::ObjectId
-  field :lft, type: Integer
-  field :rgt, type: Integer
   acts_as_nested_set
 end
 
 class MongoUser
   include Mongoid::Document
-  acts_as_nested_set parent_column: 'parent_uuid', primary_column: 'uuid'
+  include Mongoid::Timestamps
 
   field :uuid, type: String
   field :name, type: String
-  field :lft, type: Integer
-  field :rgt, type: Integer
-  field :depth, type: Integer
+  field '&d', as: :depth, type: Integer
   field :organization_id, type: BSON::ObjectId
+
+  acts_as_nested_set parent_column: 'parent_uuid', primary_column: 'uuid'
   validates_presence_of :name
   validates_presence_of :uuid
   validates_uniqueness_of :uuid
@@ -231,19 +200,20 @@ end
 
 class MongoScopedUser
   include Mongoid::Document
-  store_in collection: 'users'
+  store_in collection: 'mongo_users'
+  # field :uuid, type: String
+  # field :name, type: String
+  # field '&d', as: :depth, type: Integer
+  field :organization_id, type: BSON::ObjectId
   acts_as_nested_set parent_column: 'parent_uuid', primary_column: 'uuid', scope: :organization
 end
 
 class MongoSuperclass
   include Mongoid::Document
-  acts_as_nested_set
   store_in collection: 'single_table_inheritance'
   field :type, type: String
   field :name, type: String
-  field :parent_id, type: BSON::ObjectId
-  field :lft, type: Integer
-  field :rgt, type: Integer
+  acts_as_nested_set
 end
 
 class MongoSubclass1 < MongoSuperclass

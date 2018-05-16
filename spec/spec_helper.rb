@@ -8,7 +8,18 @@ require 'pry'
 
 require 'logger'
 require 'active_record'
-ActiveRecord::Base.logger = Logger.new(File.expand_path('../log', __dir__) + '/debug.log')
+require 'mongoid'
+
+log_dir = File.expand_path('../log', __dir__)
+ActiveRecord::Base.logger = Logger.new(log_dir + '/debug.log')
+
+logger = Logger.new(log_dir + '/mongoid.log')
+
+Mongoid.configure do |config|
+  config.connect_to 'nested_set_test'
+  config.logger = logger
+  Mongo::Logger.logger = logger
+end
 
 require 'yaml'
 require 'erb'
@@ -22,6 +33,7 @@ load(File.join(plugin_test_dir, 'db', 'schema.rb'))
 
 require 'awesome_nested_set'
 require 'support/models'
+require 'support/mongoid_models'
 
 begin
   require 'action_view'
@@ -34,8 +46,27 @@ RSpec.configure do |config|
   config.use_transactional_fixtures = true
 
   config.before(:suite) do
-    DatabaseCleaner[:mongoid].strategy = :truncation
     DatabaseCleaner[:active_record].strategy = :transaction
+    client = MongoUser.collection.client
+    %w(mongo_categories mongo_notes mongo_things mongo_brokens mongo_users mongo_default_scoped_models).each do |model|
+      fixtures = YAML.load_file "spec/fixtures/#{model}.yml"
+      backup = Mongo::Collection.new client.database, "#{model}_back"
+      fixtures.each do |_key, value|
+        id = BSON::ObjectId(value['id'])
+        update = value.except('id').merge(_id: id).transform_values do |v|
+          begin
+            BSON::ObjectId(v)
+          rescue BSON::ObjectId::Invalid
+            v
+          end
+        end
+        backup.find_one_and_replace(
+          { _id: id },
+          update,
+          upsert: true
+        )
+      end
+    end
   end
 
   config.before(:context) do

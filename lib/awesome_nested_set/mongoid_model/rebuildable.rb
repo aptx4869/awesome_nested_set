@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'awesome_nested_set/active_record_model/tree'
+require 'awesome_nested_set/mongoid_model/tree'
 
 module CollectiveIdea
   module Acts
     module NestedSet
-      module ActiveRecordModel
+      module MongoidModel
         module Rebuildable
           # Rebuilds the left & rights if unset or invalid.
           # Also very useful for converting from acts_as_tree.
@@ -18,25 +18,25 @@ module CollectiveIdea
           end
 
           def scope_for_rebuild
-            scope = proc {}
-
             if acts_as_nested_set_options[:scope]
-              scope = proc { |node|
-                scope_column_names.inject(+'') do |str, column_name|
+              proc { |node|
+                scope_column_names.each_with_object({}) do |column_name, hash|
                   column_value = node.send(column_name)
-                  cond = column_value.nil? ? 'IS NULL' : "= #{connection.quote(column_value)}"
-                  str << "AND #{connection.quote_column_name(column_name)} #{cond} "
+                  hash[column_name] = column_value
                 end
               }
+            else
+
+              proc { {} }
             end
-            scope
           end
 
           def order_for_rebuild
+            # 1 for ascending or -1 for descending
             {
-              left_column_name => :asc,
-              right_column_name => :asc,
-              primary_key => :asc
+              left_column_name => 1,
+              right_column_name => 1,
+              primary_column_name => 1
             }
           end
         end

@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
-require 'awesome_nested_set/columns'
 require 'awesome_nested_set/active_record_model'
+require 'awesome_nested_set/mongoid_model'
 
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
+    # no des
     module NestedSet #:nodoc:
       # This provides Nested Set functionality. Nested Set is a smart way to implement
       # an _ordered_ tree, with the added feature that you can select the children and all of their
@@ -56,7 +57,7 @@ module CollectiveIdea #:nodoc:
       # See CollectiveIdea::Acts::NestedSet::Model::ClassMethods for a list of class methods and
       # CollectiveIdea::Acts::NestedSet::Model for a list of instance methods added
       # to acts_as_nested_set models
-      ACTS_AS_NESTED_SET_DEFAULT_OPTIONS = {
+      ACTS_AS_NESTED_SET_AR_DEFAULT_OPTIONS = {
         parent_column: 'parent_id',
         primary_column: 'id',
         left_column: 'lft',
@@ -68,12 +69,23 @@ module CollectiveIdea #:nodoc:
         touch: false
       }.freeze
 
+      ACTS_AS_NESTED_SET_MONGO_DEFAULT_OPTIONS = {
+        parent_column: :'&p',
+        primary_column: :_id,
+        left_column: :'&l',
+        right_column: :'&r',
+        depth_column: :'&d',
+        dependent: :delete_all, # or :destroy
+        polymorphic: false,
+        counter_cache: false,
+        touch: false
+      }.freeze
+
       def acts_as_nested_set(options = {})
         acts_as_nested_set_parse_options! options
 
-        include ActiveRecordModel
-        include Columns
-        extend Columns
+        include ActiveRecordModel if activerecord?
+        include MongoidModel if mongoid?
 
         acts_as_nested_set_relate_parent!
         acts_as_nested_set_relate_children!
@@ -82,6 +94,15 @@ module CollectiveIdea #:nodoc:
 
         acts_as_nested_set_prevent_assignment_to_reserved_columns!
         acts_as_nested_set_define_callbacks!
+      end
+
+      def acts_as_nested_set_base_class
+        return base_class if activerecord?
+        if !superclass.include? Mongoid::Document
+          self
+        else
+          superclass.acts_as_nested_set_base_class
+        end
       end
 
       private
@@ -97,12 +118,17 @@ module CollectiveIdea #:nodoc:
       end
 
       def acts_as_nested_set_relate_children!
-        has_many :children, -> { order(order_column => :asc) }, _has_many_children_options
+        if mongoid?
+          has_many :children, _has_many_children_options
+          define_method :sorted_children, -> { children.order(order_column => 1) }
+        elsif activerecord?
+          has_many :children, -> { order(order_column => :asc) }, _has_many_children_options
+        end
       end
 
       def _has_many_children_options
         {
-          class_name: base_class.to_s,
+          class_name: acts_as_nested_set_base_class.to_s,
           foreign_key: parent_column_name,
           primary_key: primary_column_name,
           inverse_of: (:parent unless acts_as_nested_set_options[:polymorphic])
@@ -120,7 +146,7 @@ module CollectiveIdea #:nodoc:
       def acts_as_nested_set_relate_parent!
         polymorphic = acts_as_nested_set_options[:polymorphic]
         options = {
-          class_name: base_class.to_s,
+          class_name: acts_as_nested_set_base_class.to_s,
           foreign_key: parent_column_name,
           primary_key: primary_column_name,
           counter_cache: acts_as_nested_set_options[:counter_cache],
@@ -133,7 +159,7 @@ module CollectiveIdea #:nodoc:
       end
 
       def acts_as_nested_set_parse_options!(options)
-        options = ACTS_AS_NESTED_SET_DEFAULT_OPTIONS.merge(options)
+        options = acts_as_nested_set_default_options.merge(options)
 
         scope = options[:scope]
         options[:scope] = "#{scope}_id".intern if scope.is_a?(Symbol) && scope.to_s !~ /_id$/
@@ -153,8 +179,18 @@ module CollectiveIdea #:nodoc:
         end
       end
 
+      def acts_as_nested_set_default_options
+        return ACTS_AS_NESTED_SET_AR_DEFAULT_OPTIONS if activerecord?
+        return ACTS_AS_NESTED_SET_MONGO_DEFAULT_OPTIONS if mongoid?
+        raise "#{name} doesn't belong in a ActiveRecord or Mongoid model" unless mongoid?
+      end
+
       def activerecord?
-        respond_to? :connection
+        self < ActiveRecord::Base
+      end
+
+      def mongoid?
+        defined?(::Mongoid) && include?(::Mongoid::Document)
       end
     end
   end

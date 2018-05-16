@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'awesome_nested_set/active_record_model/move'
+require 'awesome_nested_set/mongoid_model/move'
 
 module CollectiveIdea #:nodoc:
   module Acts #:nodoc:
     module NestedSet #:nodoc:
-      module ActiveRecordModel
+      module MongoidModel
         module Movable
           def move_possible?(target)
             self != target && # Can't target self
@@ -109,8 +109,8 @@ module CollectiveIdea #:nodoc:
 
                 Move.new(target, position, self).move
                 update_counter_cache
+                after_move_to(target, position)
               end
-              after_move_to(target, position)
             end
           end
 
@@ -135,7 +135,7 @@ module CollectiveIdea #:nodoc:
           end
 
           def prevent_unpersisted_move
-            raise ActiveRecord::ActiveRecordError, 'You cannot move a new node' if new_record?
+            raise Mongoid::Errors::MongoidError, 'You cannot move a new node' if new_record?
           end
 
           def within_bounds?(left_bound, right_bound)
